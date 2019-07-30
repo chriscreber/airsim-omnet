@@ -14,15 +14,18 @@ STRICT_MODE_ON
 #include "vehicles/car/api/CarRpcLibClient.hpp"
 #include "common/common_utils/FileSystem.hpp"
 #include <iostream>
+#include <cstdlib>
 #include <chrono>
 #include <unistd.h>
 
+#include "asyncSocketClient.h"
 
-
-int main()
-{
+int main(int argc, char *argv[]) {
     using namespace msr::airlib;
     using namespace std;
+
+    setupSocket(atoi(argv[1]));
+    sendPacket("Packet 1!\r");
 
     CarRpcLibClient client;
     client.confirmConnection();
