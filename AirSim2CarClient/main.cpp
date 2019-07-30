@@ -13,8 +13,6 @@ STRICT_MODE_ON
 
 #include "vehicles/car/api/CarRpcLibClient.hpp"
 #include "common/common_utils/FileSystem.hpp"
-#include <iostream>
-#include <chrono>
 #include <unistd.h>
 
 
@@ -26,38 +24,48 @@ int main()
 
     CarRpcLibClient client;
     client.confirmConnection();
-    client.enableApiControl(true, "Car1"); //this disables manual control
+    client.enableApiControl(true, "Car2"); //this disables manual control
     CarApiBase::CarControls controls;
 
-    std::cout << "Reversing" << std::endl;;
-    controls.throttle = 0.5;
+
+    cout << "Go reverse and steer right" << endl;
+    controls.throttle = -0.5;
     controls.is_manual_gear = true;
     controls.manual_gear = -1;
-    client.setCarControls(controls, "Car1");
+    controls.steering = -0.5;
+    client.setCarControls(controls, "Car2");
 
+    sleep(5);
 
-    sleep(6);
+    controls.steering = 0;
+    client.setCarControls(controls, "Car2");
+    sleep(1);
 
     cout << "Breaking" << endl;
     controls.is_manual_gear = false;
     controls.manual_gear = 0;
-    controls.handbrake = true;
-    client.setCarControls(controls, "Car1");
+    controls.handbrake = 1;
+    client.setCarControls(controls, "Car2");
 
     sleep(1);
 
     cout << "Go forward" << endl;
-    controls.handbrake = false;
+    controls.handbrake = 0;
     controls.throttle = 1;
-    client.setCarControls(controls, "Car1");
+    controls.steering = 0;
+    client.setCarControls(controls, "Car2");
 
     sleep(10);
 
+    // std::cout << "Press Enter to activate handbrake" << std::endl; std::cin.get();
+    // controls.handbrake = true;
+    // client.setCarControls(controls, "Car2");
+    //
     // std::cout << "Press Enter to take turn and drive backward" << std::endl; std::cin.get();
     // controls.handbrake = false;
     // controls.throttle = -1;
     // controls.steering = 1;
-    // client.setCarControls(controls, "Car1");
+    // client.setCarControls(controls, "Car2");
     //
     // std::cout << "Press Enter to stop" << std::endl; std::cin.get();
     client.setCarControls(CarApiBase::CarControls());
