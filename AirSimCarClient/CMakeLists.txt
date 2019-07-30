@@ -23,17 +23,10 @@ include_directories(
     ${RPC_LIB_INCLUDES}
     ${AIRSIM_ROOT}/MavLinkCom/include
     ${AIRSIM_ROOT}/MavLinkCom/common_utils
+    ${PROJECT_SOURCE_DIR}
 )
-# link_directories(
-    # ${AIRSIM_ROOT}/AirLib/lib
-    # ${AIRSIM_ROOT}/AirLib/deps/rpclib/lib
-    # ${AIRSIM_ROOT}/build_debug/output/lib
-    # )
 
-# AddExecutableSource()
-add_executable(${PROJECT_NAME} main.cpp)
-
-			
+add_executable(${PROJECT_NAME} main.cpp asyncSocketClient.cpp)
 CommonTargetLink()
 target_link_libraries(${PROJECT_NAME} AirLib)
 target_link_libraries(${PROJECT_NAME} ${RPC_LIB})
