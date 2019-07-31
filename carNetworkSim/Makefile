@@ -1,12 +1,12 @@
 #
-# OMNeT++/OMNEST Makefile for mysockets4
+# OMNeT++/OMNEST Makefile for carNetworkSim
 #
 # This file was generated with the command:
 #  opp_makemake -f --deep -O out -I.
 #
 
 # Name of target to be created (-o option)
-TARGET = mysockets4$(D)$(EXE_SUFFIX)
+TARGET = carNetworkSim$(D)$(EXE_SUFFIX)
 TARGET_DIR = .
 
 # User interface (uncomment one) (-u option)
