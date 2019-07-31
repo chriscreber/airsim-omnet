@@ -5,8 +5,9 @@
 extern "C" {
 #endif
 
-int setupSocket(int port);
-int sendPacket(const char *packet);
+int setupSocket(int port, void (*signal_handler) (int));
+void readPacket(unsigned char *s, int numBytes);
+void sendPacket(const unsigned char *packet, int numBytes);
 
 #ifdef _cplusplus
 }

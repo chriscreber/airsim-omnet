@@ -10,26 +10,15 @@
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 
-
 #define RCVBUFSIZE 200    // Size of receive buffer
 #define HOST "127.0.0.1"
 
-int count = 0;
 
 int sock = 0, valread;
 struct sockaddr_in serv_addr;
 char buffer[200] = {0};
 
-void sigHandler(int signum) {
-  valread = read(sock, buffer, RCVBUFSIZE);
-  char packet[RCVBUFSIZE];
-  sprintf(packet, "%s%d\r", "This is packet number: ", count);
-  sendPacket(packet);
-  printf("Sending message %d\r", count);
-  count++;
-}
-
-int setupSocket(int port) {
+int setupSocket(int port, void (*signal_handler) (int)) {
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error \n");
         return -1;
@@ -48,7 +37,7 @@ int setupSocket(int port) {
         return -1;
     }
 
-    signal(SIGIO, sigHandler);
+    signal(SIGIO, signal_handler);
     fcntl(sock, F_SETOWN, getpid());
     int flag;
     flag = fcntl(sock, F_GETFL, 0);
@@ -58,13 +47,10 @@ int setupSocket(int port) {
     return 0;
 }
 
-/*
-void serializePacket(char *packet_buffer) {
-    sprintf(packet_buffer, "%s%d\r", basePacket, count);
-    return 
+void readPacket(unsigned char *s, int numBytes) {
+    valread = read(sock, s, numBytes);
 }
-*/
 
-int sendPacket(const char *packet) {
-    send(sock, packet, strlen(packet), 0);
+void sendPacket(const unsigned char *packet, int numBytes) {
+    send(sock, packet, numBytes, 0);
 }

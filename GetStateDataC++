@@ -1,7 +1,0 @@
-CarRpcLibClient client;
-client.enableApiControl(true, "Car1");
-CarApiBase::CarState state = client.getCarState;
-Vector3r pos = state.kinematics_estimated.pose.position;
-Quaternionr orient = state.kinematics_estimated.pose.orientation;
-char packet[200];
-sprintf(packet, "Speed:%f,Gear:%d,PX:%f,PY:%f,PZ:%f,OW:%f,OX:%f,OY:%f,OZ:%f", state.speed, state.gear, pos.x(), pos.y(), pos.z(), orient.w(), orient.x(), orient.y(), orient.z());

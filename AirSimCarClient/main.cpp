@@ -19,51 +19,77 @@ STRICT_MODE_ON
 #include <unistd.h>
 
 #include "asyncSocketClient.h"
+#include "packet.h"
+
+using namespace std;
+using namespace msr::airlib;
+
+struct carNetPacket *serializeCarData(CarRpcLibClient &car) {
+    CarApiBase::CarState state = car.getCarState();
+    Vector3r p = state.kinematics_estimated.pose.position;
+    Quaternionr orient = state.kinematics_estimated.pose.orientation;
+    struct carNetPacket *packet = new carNetPacket ();
+    packet->speed = state.speed;
+    packet->gear  = state.gear;
+    packet->px    = p.x();
+    packet->py    = p.y();
+    packet->pz    = p.z();
+    packet->qx    = orient.x();
+    packet->qy    = orient.y();
+    packet->qz    = orient.z();
+    packet->qw    = orient.w();
+    packet->eof   = '\r';
+    return packet;
+}
+
+CarRpcLibClient client;         // This car
+struct carNetPacket otherCar;
+
+void sigHandler(int signum) {
+    readPacket((unsigned char *)&otherCar, sizeof(otherCar));
+    cout << otherCar.speed << endl;
+}
 
 int main(int argc, char *argv[]) {
-    using namespace msr::airlib;
-    using namespace std;
-
-    setupSocket(atoi(argv[1]));
-    sendPacket("Packet 1!\r");
-
-    CarRpcLibClient client;
     client.confirmConnection();
-    client.enableApiControl(true, "Car1"); //this disables manual control
+    char carName[10] = {0};
+    sprintf(carName, "Car%d", atoi(argv[1]));
+    client.enableApiControl(true, carName);  //this disables manual control
     CarApiBase::CarControls controls;
 
-    std::cout << "Reversing" << std::endl;;
-    controls.throttle = 0.5;
-    controls.is_manual_gear = true;
-    controls.manual_gear = -1;
-    client.setCarControls(controls, "Car1");
+    setupSocket(atoi(argv[1]), sigHandler);
+    cout << "Sleeping!" << endl;
+    sleep(5);
+
+    while (true) {
+        struct carNetPacket *packet = serializeCarData(client);
+        sendPacket((unsigned char *)packet, sizeof(*packet));
+        delete packet;
+        cout << "Sending message" << endl;
+        sleep(2); 
+        std::cout << "Reversing" << std::endl;;
+        controls.throttle = 0.5;
+        controls.is_manual_gear = true;
+        controls.manual_gear = -1;
+        client.setCarControls(controls, carName);
+
+        sleep(2); 
+        cout << "Breaking" << endl;
+        controls.is_manual_gear = false;
+        controls.manual_gear = 0;
+        controls.handbrake = true;
+        client.setCarControls(controls, carName);
 
 
-    sleep(6);
+        sleep(2); 
+        cout << "Go forward" << endl;
+        controls.handbrake = false;
+        controls.throttle = 1;
+        client.setCarControls(controls, carName);
 
-    cout << "Breaking" << endl;
-    controls.is_manual_gear = false;
-    controls.manual_gear = 0;
-    controls.handbrake = true;
-    client.setCarControls(controls, "Car1");
 
-    sleep(1);
+    }
 
-    cout << "Go forward" << endl;
-    controls.handbrake = false;
-    controls.throttle = 1;
-    client.setCarControls(controls, "Car1");
-
-    sleep(10);
-
-    // std::cout << "Press Enter to take turn and drive backward" << std::endl; std::cin.get();
-    // controls.handbrake = false;
-    // controls.throttle = -1;
-    // controls.steering = 1;
-    // client.setCarControls(controls, "Car1");
-    //
-    // std::cout << "Press Enter to stop" << std::endl; std::cin.get();
     client.setCarControls(CarApiBase::CarControls());
-
     return 0;
 }

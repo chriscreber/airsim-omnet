@@ -4,6 +4,23 @@
 #include <string>
 using namespace std;
 
+// TODO: Add car ID for multicar simulations!
+
+struct carNetPacket {
+    float speed;
+    float gear;
+    float px;
+    float py;
+    float pz;
+    float qw;
+    float qx;
+    float qy;
+    float qz;
+    char  eof;
+} __attribute__ ((packed));
+
+// TODO: Namespace this please!
+/*
 class Packet {
 private:
 	float Speed, float Gear, float PX, float PY, float PZ, float OW, float OX, float OY, float OZ;
@@ -20,5 +37,6 @@ public:
 	float getOZ();
 	void setValues(string);
 };
+*/
 
 #endif
