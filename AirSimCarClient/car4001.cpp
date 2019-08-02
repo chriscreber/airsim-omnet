@@ -27,6 +27,7 @@ using namespace msr::airlib;
 struct carNetPacket *serializeCarData(CarRpcLibClient &car) {
     CarApiBase::CarState state = car.getCarState();
     Vector3r p = state.kinematics_estimated.pose.position;
+    cout << p << endl;
     Quaternionr orient = state.kinematics_estimated.pose.orientation;
     struct carNetPacket *packet = new carNetPacket ();
     packet->speed = state.speed;
@@ -61,33 +62,20 @@ int main(int argc, char *argv[]) {
     cout << "Sleeping!" << endl;
     sleep(5);
 
+    /*
+    cout << "Go forward" << endl;
+    controls.handbrake = false;
+    controls.throttle = 10;
+    client.setCarControls(controls, carName);
+    */
+
     while (true) {
         struct carNetPacket *packet = serializeCarData(client);
         sendPacket((unsigned char *)packet, sizeof(*packet));
         delete packet;
         cout << "Sending message" << endl;
-        sleep(2); 
-        std::cout << "Reversing" << std::endl;;
-        controls.throttle = 0.5;
-        controls.is_manual_gear = true;
-        controls.manual_gear = -1;
-        client.setCarControls(controls, carName);
 
-        sleep(2); 
-        cout << "Breaking" << endl;
-        controls.is_manual_gear = false;
-        controls.manual_gear = 0;
-        controls.handbrake = true;
-        client.setCarControls(controls, carName);
-
-
-        sleep(2); 
-        cout << "Go forward" << endl;
-        controls.handbrake = false;
-        controls.throttle = 1;
-        client.setCarControls(controls, carName);
-
-
+        sleep(1);
     }
 
     client.setCarControls(CarApiBase::CarControls());

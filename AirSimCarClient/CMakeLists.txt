@@ -8,7 +8,7 @@ add_subdirectory("${AIRSIM_ROOT}/cmake/rpclib_wrapper" ./lib/rpc)
 add_subdirectory("${AIRSIM_ROOT}/cmake/AirLib" ./lib/airlib)
 add_subdirectory("${AIRSIM_ROOT}/cmake/MavLinkCom" ./lib/mavlinkcom)
 
-project(HelloCar)
+project(Car)
 LIST(APPEND CMAKE_MODULE_PATH "${AIRSIM_ROOT}/cmake/cmake-modules") 
 INCLUDE("${AIRSIM_ROOT}/cmake/cmake-modules/CommonSetup.cmake")
 CommonSetup()
@@ -26,7 +26,14 @@ include_directories(
     ${PROJECT_SOURCE_DIR}
 )
 
-add_executable(${PROJECT_NAME} main.cpp asyncSocketClient.cpp)
-CommonTargetLink()
-target_link_libraries(${PROJECT_NAME} AirLib)
-target_link_libraries(${PROJECT_NAME} ${RPC_LIB})
+add_executable(${PROJECT_NAME}4001 car4001.cpp asyncSocketClient.cpp)
+add_executable(${PROJECT_NAME}4002 car4002.cpp asyncSocketClient.cpp)
+
+# CommonTargetLink()
+target_link_libraries(${PROJECT_NAME}4001 ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${PROJECT_NAME}4002 ${CMAKE_THREAD_LIBS_INIT})
+
+target_link_libraries(${PROJECT_NAME}4001 AirLib)
+target_link_libraries(${PROJECT_NAME}4001 ${RPC_LIB})
+target_link_libraries(${PROJECT_NAME}4002 AirLib)
+target_link_libraries(${PROJECT_NAME}4002 ${RPC_LIB})
