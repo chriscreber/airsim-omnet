@@ -17,45 +17,74 @@ STRICT_MODE_ON
 #include <cstdlib>
 #include <chrono>
 #include <unistd.h>
+#include <ctime>
+#include <cmath>
 
 #include "asyncSocketClient.h"
 #include "packet.h"
 
+// these need to match the settings.json file
+// TODO: Read settings.json so we don't have to hardcode values
+#define STARTX 10
+#define STARTY 10
+#define STARTZ 0
+
 using namespace std;
+using namespace cPkt;
 using namespace msr::airlib;
 
-struct carNetPacket *serializeCarData(CarRpcLibClient &car) {
-    CarApiBase::CarState state = car.getCarState();
+// clock_t startTime;
+
+// struct carNetPacket *serializeCarData(CarRpcLibClient &car, char *carName) {
+//     // cout << carName << endl;
+//     CarApiBase::CarState state = car.getCarState(carName);
+//     Vector3r p = state.kinematics_estimated.pose.position;
+//     cout << p << endl;
+//     Quaternionr orient = state.kinematics_estimated.pose.orientation;
+//     struct carNetPacket *packet = new carNetPacket ();
+//     // packet->timeElapsed = double(clock() - startTime);
+//     packet->speed = state.speed;
+//     packet->gear  = state.gear;
+//     packet->px    = p.x();
+//     packet->py    = p.y();
+//     packet->pz    = p.z();
+//     packet->qx    = orient.x();
+//     packet->qy    = orient.y();
+//     packet->qz    = orient.z();
+//     packet->qw    = orient.w();
+//     packet->eof   = '\r';
+//     return packet;
+// }
+
+void serializeCarData(CarRpcLibClient &car, char *carName, char *packetString) {
+    // cout << carName << endl;
+    CarApiBase::CarState state = car.getCarState(carName);
     Vector3r p = state.kinematics_estimated.pose.position;
     cout << p << endl;
     Quaternionr orient = state.kinematics_estimated.pose.orientation;
-    struct carNetPacket *packet = new carNetPacket ();
-    packet->speed = state.speed;
-    packet->gear  = state.gear;
-    packet->px    = p.x();
-    packet->py    = p.y();
-    packet->pz    = p.z();
-    packet->qx    = orient.x();
-    packet->qy    = orient.y();
-    packet->qz    = orient.z();
-    packet->qw    = orient.w();
-    packet->eof   = '\r';
-    return packet;
+    sprintf(packetString, "Speed:%f,Gear:%d,PX:%f,PY:%f,PZ:%f,OW:%f,OX:%f,OY:%f,OZ:%f\r\n", state.speed, state.gear, p.x() + STARTX, p.y() + STARTY, p.z() + STARTZ, orient.w(), orient.x(), orient.y(), orient.z());
 }
 
 CarRpcLibClient client;         // This car
-struct carNetPacket otherCar;
+// struct carNetPacket otherCar;
+char buffer[RCVBUFSIZE] = {0};
+carPacket otherCar;
+int pktReady = 0;
 
 void sigHandler(int signum) {
-    readPacket((unsigned char *)&otherCar, sizeof(otherCar));
-    cout << otherCar.speed << endl;
+    // readPacket((unsigned char *)&otherCar, sizeof(otherCar));
+    readPacket(buffer);
+    otherCar.setValues(buffer);
+    cout << otherCar.Speed << endl;
+    pktReady = 1;
 }
 
 int main(int argc, char *argv[]) {
+    // startTime = clock();
     client.confirmConnection();
     char carName[10] = {0};
     sprintf(carName, "Car%d", atoi(argv[1]));
-    client.enableApiControl(true, carName);  //this disables manual control
+    // client.enableApiControl(true, carName);  //this disables manual control
     CarApiBase::CarControls controls;
 
     setupSocket(atoi(argv[1]), sigHandler);
@@ -65,17 +94,43 @@ int main(int argc, char *argv[]) {
     /*
     cout << "Go forward" << endl;
     controls.handbrake = false;
-    controls.throttle = 10;
+    controls.throttle = 1;
     client.setCarControls(controls, carName);
     */
 
     while (true) {
-        struct carNetPacket *packet = serializeCarData(client);
-        sendPacket((unsigned char *)packet, sizeof(*packet));
-        delete packet;
+        // struct carNetPacket *packet = serializeCarData(client, carName);
+        char packetString[200] = {0};
+        serializeCarData(client, carName, packetString);
+        cout << packetString << endl;
+        sendPacket(packetString);
+        // sendPacket((unsigned char *)packet, sizeof(*packet));
+        // delete packet;
         cout << "Sending message" << endl;
-
-        sleep(1);
+        if(pktReady) {
+          cout << "hi" << endl;
+          pktReady = 0;
+        }
+        // controls.handbrake = false;
+        // controls.throttle = 0.1;
+        // client.setCarControls(controls, carName);
+        // sleep(1);
+        // controls.is_manual_gear = false;
+        // controls.manual_gear = 0;
+        // controls.handbrake = true;
+        // client.setCarControls(controls, carName);
+        // sleep(1);
+        // controls.handbrake = false;
+        // controls.throttle = 0.1;
+        // controls.is_manual_gear = true;
+        // controls.manual_gear = -1;
+        // client.setCarControls(controls, carName);
+        // sleep(1);
+        // controls.is_manual_gear = false;
+        // controls.manual_gear = 0;
+        // controls.handbrake = true;
+        // client.setCarControls(controls, carName);
+        sleep(2);
     }
 
     client.setCarControls(CarApiBase::CarControls());

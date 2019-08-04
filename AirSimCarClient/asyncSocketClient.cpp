@@ -16,7 +16,6 @@
 
 int sock = 0, valread;
 struct sockaddr_in serv_addr;
-char buffer[200] = {0};
 
 int setupSocket(int port, void (*signal_handler) (int)) {
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -47,10 +46,18 @@ int setupSocket(int port, void (*signal_handler) (int)) {
     return 0;
 }
 
-void readPacket(unsigned char *s, int numBytes) {
-    valread = read(sock, s, numBytes);
+void readPacket(char *s) {
+    valread = read(sock, s, RCVBUFSIZE);
 }
 
-void sendPacket(const unsigned char *packet, int numBytes) {
-    send(sock, packet, numBytes, 0);
+void sendPacket(char *packet) {
+    send(sock, packet, RCVBUFSIZE, 0);
 }
+
+// void readPacket(unsigned char *s, int numBytes) {
+//     valread = read(sock, s, numBytes);
+// }
+//
+// void sendPacket(const unsigned char *packet, int numBytes) {
+//     send(sock, packet, numBytes, 0);
+// }

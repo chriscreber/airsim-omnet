@@ -17,38 +17,41 @@ STRICT_MODE_ON
 #include <cstdlib>
 #include <chrono>
 #include <unistd.h>
+#include <cmath>
 
 #include "asyncSocketClient.h"
 #include "packet.h"
 #include <Eigen/Geometry>
 
 using namespace std;
+using namespace cPkt;
 using namespace msr::airlib;
 
-struct carNetPacket *serializeCarData(CarRpcLibClient &car) {
-    CarApiBase::CarState state = car.getCarState();
+// these need to match the settings.json file
+// TODO: Read settings.json so we don't have to hardcode values
+#define STARTX -20
+#define STARTY 0
+#define STARTZ 0
+
+void serializeCarData(CarRpcLibClient &car, char *carName, char *packetString) {
+    // cout << carName << endl;
+    CarApiBase::CarState state = car.getCarState(carName);
     Vector3r p = state.kinematics_estimated.pose.position;
+    cout << p << endl;
     Quaternionr orient = state.kinematics_estimated.pose.orientation;
-    struct carNetPacket *packet = new carNetPacket ();
-    packet->speed = state.speed;
-    packet->gear  = state.gear;
-    packet->px    = p.x();
-    packet->py    = p.y();
-    packet->pz    = p.z();
-    packet->qx    = orient.x();
-    packet->qy    = orient.y();
-    packet->qz    = orient.z();
-    packet->qw    = orient.w();
-    packet->eof   = '\r';
-    return packet;
+    sprintf(packetString, "Speed:%f,Gear:%d,PX:%f,PY:%f,PZ:%f,OW:%f,OX:%f,OY:%f,OZ:%f\r\n", state.speed, state.gear, p.x() + STARTX, p.y() + STARTY, p.z() + STARTZ, orient.w(), orient.x(), orient.y(), orient.z());
 }
 
 CarRpcLibClient thisCar;         // This car
-struct carNetPacket otherCar;
+// struct carNetPacket otherCar;
+char buffer[RCVBUFSIZE] = {0};
+carPacket otherCar;
 int otherCarPktReady = 0;
 
 void sigHandler(int signum) {
-    readPacket((unsigned char *)&otherCar, sizeof(otherCar));
+    readPacket(buffer);
+    otherCar.setValues(buffer);
+
     otherCarPktReady = 1;
 }
 
@@ -69,10 +72,15 @@ int main(int argc, char *argv[]) {
     cout << "Sleeping!" << endl;
     sleep(5);
 
-    struct carNetPacket *packet = serializeCarData(thisCar);
-    sendPacket((unsigned char *)packet, sizeof(*packet));
-    delete packet;
-    cout << "Sending message" << endl;
+    // struct carNetPacket *packet = serializeCarData(thisCar, carName);
+    // sendPacket((unsigned char *)packet, sizeof(*packet));
+    // delete packet;
+    // cout << "Sending message" << endl;
+
+    cout << "Go forward" << endl;
+    controls.handbrake = false;
+    controls.throttle = 0.3;
+    thisCar.setCarControls(controls, carName);
 
     while (true) {
         /*
@@ -97,21 +105,27 @@ int main(int argc, char *argv[]) {
 
         // Get angle to turn the carto face other car
         if(otherCarPktReady == 1){
-          CarApiBase::CarState thisCarState = thisCar.getCarState();
-          Vector3r thisCarPosition = thisCarState.kinematics_estimated.pose.position;
+          CarApiBase::CarState thisCarState = thisCar.getCarState(carName);
+          Vector3r _thisCarPosition = thisCarState.kinematics_estimated.pose.position;
+          Vector3r thisCarPosition (_thisCarPosition.x() + STARTX, _thisCarPosition.y() + STARTY, _thisCarPosition.z() + STARTZ);
           Quaternionr thisCarQuat = thisCarState.kinematics_estimated.pose.orientation;
-          Vector3r otherCarPosition (otherCar.px, otherCar.py, otherCar.pz);
+          cout << "thisCarQuat: " << thisCarQuat << endl;
+          Vector3r otherCarPosition (otherCar.PX, otherCar.PY, otherCar.PZ);
           cout << "This Car Position: " << thisCarPosition << " Other Car Position: " << otherCarPosition << endl;
           Vector3r *collisionVecx = getCollisionVector(thisCarPosition, otherCarPosition);
-          cout << " CollisionVector: " << *collisionVecx << endl;
+          cout << " CollisionVectorx: " << *collisionVecx << endl;
           Vector3r collisionVecz (0, 0, 1);
           Quaternionr collisionQuat = Eigen::Quaternion<float>::FromTwoVectors (*collisionVecx, collisionVecz);
           Quaternionr transformQuat = collisionQuat * thisCarQuat.inverse();      // Check order
-          Vector3r turnAngles = transformQuat.toRotationMatrix().eulerAngles(2, 1, 2);
-          cout << turnAngles.z() << endl;
+          Vector3r turnAngles = transformQuat.toRotationMatrix().eulerAngles(2, 2, 2);
+          cout << "turnAngle.z(): " << turnAngles.z() << endl;
+
+          controls.steering = turnAngles.z() / (-2 * M_PI);
+          thisCar.setCarControls(controls, carName);
+
           delete collisionVecx;
 
-          sleep(2);
+          // sleep(2);
           /*
           cout << "Go forward" << endl;
           controls.handbrake = false;
