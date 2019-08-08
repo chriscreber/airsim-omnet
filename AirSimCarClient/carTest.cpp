@@ -18,6 +18,7 @@ STRICT_MODE_ON
 #include <chrono>
 #include <unistd.h>
 #include <ctime>
+// #include "Quat.h"
 
 #include "asyncSocketClient.h"
 #include "packet.h"
@@ -30,24 +31,72 @@ STRICT_MODE_ON
 #define STARTZ1 0
 
 #define STARTX2 4
-#define STARTY2 -1
+#define STARTY2 4
 #define STARTZ2 0
 
 using namespace std;
 using namespace cPkt;
 using namespace msr::airlib;
 
+// So I found code online to help determine the angle between two vectors, we may have some dependency issues but I think it is worth checking out.
+// I changed a bit of the code to see if I could adapt it to what we have, this is untested but it compiles so idk.
+// It requires us to download OpenGL.
+Quaternionr RotationBetweenVectors(Vector3r start, Vector3r dest){
+  dest.normalize();
+  start.normalize();
+
+	float cosTheta = start.dot(dest);
+	Vector3r rotationAxis;
+
+	if (cosTheta < -1 + 0.001f){
+		// special case when vectors in opposite directions:
+		// there is no "ideal" rotation axis
+		// So guess one; any will do as long as it's perpendicular to start
+		rotationAxis = Vector3r(0.0f, 0.0f, 1.0f).cross(start);
+		if (rotationAxis.squaredNorm() < 0.01 ) // bad luck, they were parallel, try again!
+			rotationAxis = Vector3r(1.0f, 0.0f, 0.0f).cross(start);
+
+    rotationAxis.normalize();
+    Eigen::Quaternion<float> retAxis;
+    retAxis = Eigen::AngleAxis<float>(180.0, rotationAxis);
+		return retAxis;
+	}
+
+  rotationAxis = start.cross(dest);
+
+	float s = sqrt( (1+cosTheta)*2 );
+	float invs = 1 / s;
+
+	Quaternionr retQuat(
+		(s * 0.5f),
+		(rotationAxis.x() * invs),
+		(rotationAxis.y() * invs),
+		(rotationAxis.z() * invs)
+	);
+
+  return retQuat;
+
+}
+
 Vector3r *getCollisionVector(Vector3r &thisCarPos, Vector3r &otherCarPos) {
     Vector3r _collisionVector = (otherCarPos - thisCarPos);
     Vector3r *collisionVector = new Vector3r (_collisionVector);
     return collisionVector;
 }
+// 1.32579632679
+// 1.81579632679
 
 int main(int argc, char const *argv[]) {
 
   Vector3r car1Pos (STARTX1, STARTY1, STARTZ1);
   Quaternionr car1Quat (1, 0, 0, 0);
-  Vector3r car2Pos (STARTX2, STARTY2, STARTZ2);
+  cout << car1Quat.w() << endl;
+  Vector3r car2Pos (atoi(argv[1]), atoi(argv[2]), STARTZ2);
+  // Vector3r car2Pos (STARTX2, STARTY2, STARTZ2);
+
+  // Vector3r car1Pos (STARTY1, STARTX1, STARTZ1);
+  // Quaternionr car1Quat (1, 0, 0, 0);
+  // Vector3r car2Pos (STARTY2, STARTX2, STARTZ2);
 
   Vector3r *collisionVecx = getCollisionVector(car1Pos, car2Pos);
   cout << "CollisionVector: " << *collisionVecx << endl;
@@ -56,10 +105,11 @@ int main(int argc, char const *argv[]) {
 
   Quaternionr collisionQuat = Eigen::Quaternion<float>::FromTwoVectors (*collisionVecx, collisionVecz);
   Quaternionr transformQuat = collisionQuat * car1Quat.inverse();
+  // struct FQuat transformFQuat (transformQuat.w(), transformQuat.x(), transformQuat.y(), transformQuat.z());
 
   cout << "turnAngles: " << endl;
 
-  // there seems to be the option of 4+ for eulerAngles. So it allows for input larger than 3.
+  // there seems to be the option of 4+ for eulerAngles. So it allows for input larger than 3,but I am unsure of what that does.
   //Vector3r turntest = transformQuat.toRotationMatrix().eulerAngles(6, 6, 6);
   //cout << "turntest: " << turntest << endl;
 
@@ -123,6 +173,8 @@ int main(int argc, char const *argv[]) {
 
   cout << "turnAngles.z: " << endl;
 
+  // Vector3r turnAngles = transformQuat.toRotationMatrix();
+  // cout << "turnAngle.z(): " << turnAngles.z() << endl;
   Vector3r turnAngles1 = transformQuat.toRotationMatrix().eulerAngles(0, 0, 0);
   cout << "turnAngle1.z(): " << turnAngles1.z() << endl;
   Vector3r turnAngles2 = transformQuat.toRotationMatrix().eulerAngles(0, 0, 1);
@@ -181,6 +233,9 @@ int main(int argc, char const *argv[]) {
   cout << "turnAngle39.z(): " << turnAngles39.z() << endl;
 
   cout << transformQuat.toRotationMatrix() << endl;
+
+  // cout << myFQuat.Euler() << endl;
+  // cout << transformFQuat.Euler() << endl;
 
   return 0;
 }

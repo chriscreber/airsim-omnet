@@ -18,6 +18,8 @@ STRICT_MODE_ON
 #include <chrono>
 #include <unistd.h>
 #include <cmath>
+#include <tgmath.h>
+
 
 #include "asyncSocketClient.h"
 #include "packet.h"
@@ -61,6 +63,74 @@ Vector3r *getCollisionVector(Vector3r &thisCarPos, Vector3r &otherCarPos) {
     return collisionVector;
 }
 
+// return angle of otherCar from x axis in radians
+float getCollisionAngle(Vector3r &collisionVecx) {
+    float theta;
+    theta = asin(collisionVecx.y() / hypot(collisionVecx.x(), collisionVecx.y()));
+    if(collisionVecx.x() < 0) {
+      if(collisionVecx.y() < 0) {
+        theta = M_PI - theta;
+      } else if(collisionVecx.y() > 0) {
+        theta = -1 * M_PI - theta;
+      } else if(theta < 0) {
+        theta = M_PI;
+      }
+    }
+
+    return theta;
+}
+
+// return angle of this car around z axis from x axis in radians (CW is positive, CCW is negative)
+float getZAngleFromQuat(Quaternionr &thisCarQuat) {
+  float theta;
+  theta = 2 * acos(thisCarQuat.w());
+  if(thisCarQuat.z() < 0) {
+    theta = -1 * theta;
+  }
+
+  return theta;
+}
+
+
+
+Quaternionr RotationBetweenVectors(Vector3r start, Vector3r dest){
+  dest.normalize();
+  start.normalize();
+
+	float cosTheta = start.dot(dest);
+	Vector3r rotationAxis;
+
+	if (cosTheta < -1 + 0.001f){
+		// special case when vectors in opposite directions:
+		// there is no "ideal" rotation axis
+		// So guess one; any will do as long as it's perpendicular to start
+		rotationAxis = Vector3r(0.0f, 0.0f, 1.0f).cross(start);
+		if (rotationAxis.squaredNorm() < 0.01 ) // bad luck, they were parallel, try again!
+			rotationAxis = Vector3r(1.0f, 0.0f, 0.0f).cross(start);
+
+    rotationAxis.normalize();
+    Eigen::Quaternion<float> retAxis;
+    retAxis = Eigen::AngleAxis<float>(180.0, rotationAxis);
+		return retAxis;
+	}
+
+  rotationAxis = start.cross(dest);
+
+	float s = sqrt( (1+cosTheta)*2 );
+	float invs = 1 / s;
+
+	Quaternionr retQuat(
+		(s * 0.5f),
+		(rotationAxis.x() * invs),
+		(rotationAxis.y() * invs),
+		(rotationAxis.z() * invs)
+	);
+
+  return retQuat;
+
+}
+
+
 int main(int argc, char *argv[]) {
     thisCar.confirmConnection();
     char carName[10] = {0};
@@ -83,45 +153,39 @@ int main(int argc, char *argv[]) {
     thisCar.setCarControls(controls, carName);
 
     while (true) {
-        /*
-        struct carNetPacket *packet = serializeCarData(thisCar);
-        sendPacket((unsigned char *)packet, sizeof(*packet));
-        delete packet;
-        cout << "Sending message" << endl;
 
-        std::cout << "Reversing" << std::endl;;
-        controls.throttle = 0.5;
-        controls.is_manual_gear = true;
-        controls.manual_gear = -1;
-        thisCar.setCarControls(controls, carName);
-
-        sleep(2);
-        cout << "Breaking" << endl;
-        controls.is_manual_gear = false;
-        controls.manual_gear = 0;
-        controls.handbrake = true;
-        thisCar.setCarControls(controls, carName);
-        */
-
-        // Get angle to turn the carto face other car
+        // Get angle to turn the car to face other car
         if(otherCarPktReady == 1){
           CarApiBase::CarState thisCarState = thisCar.getCarState(carName);
           Vector3r _thisCarPosition = thisCarState.kinematics_estimated.pose.position;
           Vector3r thisCarPosition (_thisCarPosition.x() + STARTX, _thisCarPosition.y() + STARTY, _thisCarPosition.z() + STARTZ);
+          // Vector3r thisCarPosition (_thisCarPosition.y() + STARTY, _thisCarPosition.x() + STARTX, _thisCarPosition.z() + STARTZ);
           Quaternionr thisCarQuat = thisCarState.kinematics_estimated.pose.orientation;
+          // Quaternionr thisCarQuat (-1 * _thisCarQuat.w(), _thisCarQuat.x(), _thisCarQuat.y(), _thisCarQuat.z());
           cout << "thisCarQuat: " << thisCarQuat << endl;
           Vector3r otherCarPosition (otherCar.PX, otherCar.PY, otherCar.PZ);
           cout << "This Car Position: " << thisCarPosition << " Other Car Position: " << otherCarPosition << endl;
           Vector3r *collisionVecx = getCollisionVector(thisCarPosition, otherCarPosition);
           cout << " CollisionVectorx: " << *collisionVecx << endl;
-          Vector3r collisionVecz (0, 0, 1);
-          Quaternionr collisionQuat = Eigen::Quaternion<float>::FromTwoVectors (*collisionVecx, collisionVecz);
-          Quaternionr transformQuat = collisionQuat * thisCarQuat.inverse();      // Check order
-          Vector3r turnAngles = transformQuat.toRotationMatrix().eulerAngles(2, 2, 2);
-          cout << "turnAngle.z(): " << turnAngles.z() << endl;
 
-          controls.steering = turnAngles.z() / (-2 * M_PI);
+          //START
+          float collisionAngle = getCollisionAngle(*collisionVecx);
+          float thisCarAngle = getZAngleFromQuat(thisCarQuat);
+          float turnAngle = collisionAngle - thisCarAngle;
+
+          controls.steering = turnAngle / (2 * M_PI);
           thisCar.setCarControls(controls, carName);
+
+
+          //END
+          // Vector3r collisionVecz (0, 0, 1);
+          // Quaternionr collisionQuat = Eigen::Quaternion<float>::FromTwoVectors (*collisionVecx, collisionVecz);
+          // Quaternionr transformQuat = collisionQuat * thisCarQuat.inverse();      // Check order
+          // Vector3r turnAngles = transformQuat.toRotationMatrix().eulerAngles(2, 1, 2);
+          // cout << "turnAngle.z(): " << turnAngles.z() << endl;
+          //
+          // controls.steering = turnAngles.z() / (-2 * M_PI);
+          // thisCar.setCarControls(controls, carName);
 
           delete collisionVecx;
 

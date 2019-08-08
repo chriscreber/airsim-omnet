@@ -63,6 +63,8 @@ void serializeCarData(CarRpcLibClient &car, char *carName, char *packetString) {
     cout << p << endl;
     Quaternionr orient = state.kinematics_estimated.pose.orientation;
     sprintf(packetString, "Speed:%f,Gear:%d,PX:%f,PY:%f,PZ:%f,OW:%f,OX:%f,OY:%f,OZ:%f\r\n", state.speed, state.gear, p.x() + STARTX, p.y() + STARTY, p.z() + STARTZ, orient.w(), orient.x(), orient.y(), orient.z());
+    // sprintf(packetString, "Speed:%f,Gear:%d,PX:%f,PY:%f,PZ:%f,OW:%f,OX:%f,OY:%f,OZ:%f\r\n", state.speed, state.gear, p.y() + STARTY, p.x() + STARTX, p.z() + STARTZ, orient.w(), orient.x(), orient.y(), orient.z());
+
 }
 
 CarRpcLibClient client;         // This car

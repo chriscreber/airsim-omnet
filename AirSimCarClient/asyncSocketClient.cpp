@@ -10,9 +10,11 @@
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 
+#include <iostream>
+using namespace std;
+
 #define RCVBUFSIZE 200    // Size of receive buffer
 #define HOST "127.0.0.1"
-
 
 int sock = 0, valread;
 struct sockaddr_in serv_addr;

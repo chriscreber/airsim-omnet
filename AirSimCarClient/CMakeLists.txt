@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5.0)
 project(AirSim)
 
 set(AIRSIM_ROOT $ENV{HOME}/AirSim)
+set(UNREAL_ROOT $ENV{HOME}/UnrealEngine/Engine/Source/Runtime/Core/Public)
 set (CMAKE_CXX_STANDARD 11)
 
 add_subdirectory("${AIRSIM_ROOT}/cmake/rpclib_wrapper" ./lib/rpc)
@@ -24,6 +25,11 @@ include_directories(
     ${AIRSIM_ROOT}/MavLinkCom/include
     ${AIRSIM_ROOT}/MavLinkCom/common_utils
     ${PROJECT_SOURCE_DIR}
+    ${UNREAL_ROOT}
+    ${UNREAL_ROOT}/Math
+    ${UNREAL_ROOT}/Containers
+    ${UNREAL_ROOT}/Templates
+    ${UNREAL_ROOT}/HAL
 )
 
 add_executable(${PROJECT_NAME}4001 car4001.cpp asyncSocketClient.cpp packet.cpp)
