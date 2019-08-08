@@ -91,7 +91,30 @@ float getZAngleFromQuat(Quaternionr &thisCarQuat) {
   return theta;
 }
 
+// calculate turn angle
+float calcTurnAngle(float collisionAngle, float thisCarAngle) {
+  float turnAngle = collisionAngle - thisCarAngle;
+  if(turnAngle < -1 * M_PI) {
+    turnAngle = turnAngle + 2 * M_PI;
+  } else if(turnAngle > M_PI) {
+    turnAngle = turnAngle - 2 * M_PI;
+  }
 
+  return turnAngle;
+}
+
+// get the steering value from the turn angle. Between -0.5 and 0.5
+float calcSteering(float turnAngle) {
+  if(turnAngle < M_PI / -2) {
+    turnAngle = -0.5;
+  } else if(turnAngle > M_PI) {
+    turnAngle = 0.5;
+  } else {
+    turnAngle = turnAngle / M_PI;
+  }
+
+  return turnAngle;
+}
 
 Quaternionr RotationBetweenVectors(Vector3r start, Vector3r dest){
   dest.normalize();
@@ -171,9 +194,9 @@ int main(int argc, char *argv[]) {
           //START
           float collisionAngle = getCollisionAngle(*collisionVecx);
           float thisCarAngle = getZAngleFromQuat(thisCarQuat);
-          float turnAngle = collisionAngle - thisCarAngle;
+          float turnAngle = calcTurnAngle(collisionAngle, thisCarAngle);
 
-          controls.steering = turnAngle / (2 * M_PI);
+          controls.steering = calcSteering(turnAngle);
           thisCar.setCarControls(controls, carName);
 
 
