@@ -8,7 +8,7 @@ carPacket::carPacket(float speed, float gear, float px, float py, float pz, floa
 {}
 
 // There is no error check for the format of the string, will segfault with improper formatting
-void carPacket::setValues(string test) {
+void carPacket::setValues(string str) {
 	string delim = ",";
 	string strArr[9];
 	float attributes[9];
@@ -16,13 +16,13 @@ void carPacket::setValues(string test) {
 	string token;
 
 	size_t pos = 0;
-	while ((pos = test.find(delim)) != std::string::npos)
+	while ((pos = str.find(delim)) != std::string::npos)
 	{
-		token = test.substr(0, pos);
+		token = str.substr(0, pos);
 		strArr[counter++] = token;
-		test.erase(0, pos + delim.length());
+		str.erase(0, pos + delim.length());
 	}
-	strArr[counter] = test.substr(0, test.length());
+	strArr[counter] = str.substr(0, str.length());
 
 	for (int index = 0; index < 9; index++)
 	{

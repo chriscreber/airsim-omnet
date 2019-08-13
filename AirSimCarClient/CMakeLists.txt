@@ -10,6 +10,7 @@ add_subdirectory("${AIRSIM_ROOT}/cmake/AirLib" ./lib/airlib)
 add_subdirectory("${AIRSIM_ROOT}/cmake/MavLinkCom" ./lib/mavlinkcom)
 
 project(Car)
+set (CMAKE_CXX_FLAGS "-ljsoncpp")
 LIST(APPEND CMAKE_MODULE_PATH "${AIRSIM_ROOT}/cmake/cmake-modules")
 INCLUDE("${AIRSIM_ROOT}/cmake/cmake-modules/CommonSetup.cmake")
 CommonSetup()
@@ -32,14 +33,21 @@ include_directories(
     ${UNREAL_ROOT}/HAL
 )
 
-add_executable(${PROJECT_NAME}4001 car4001.cpp asyncSocketClient.cpp packet.cpp)
-add_executable(${PROJECT_NAME}4002 car4002.cpp asyncSocketClient.cpp packet.cpp)
-add_executable(${PROJECT_NAME}Test carTest.cpp asyncSocketClient.cpp packet.cpp)
+## trying to add stuff for jsoncpp
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(JSONCPP jsoncpp)
+link_libraries(${JSONCPP_LIBRARIES})
+
+
+
+add_executable(${PROJECT_NAME}4001 car4001.cpp rotationUtility.cpp asyncSocketClient.cpp packet.cpp collisionUtility.cpp)
+add_executable(${PROJECT_NAME}4002 car4002.cpp rotationUtility.cpp asyncSocketClient.cpp packet.cpp collisionUtility.cpp)
+add_executable(${PROJECT_NAME}Test carTest.cpp rotationUtility.cpp asyncSocketClient.cpp packet.cpp collisionUtility.cpp)
 
 # CommonTargetLink()
-target_link_libraries(${PROJECT_NAME}4001 ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(${PROJECT_NAME}4002 ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(${PROJECT_NAME}Test ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${PROJECT_NAME}4001 ${CMAKE_THREAD_LIBS_INIT} ${JSONCPP_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}4002 ${CMAKE_THREAD_LIBS_INIT} ${JSONCPP_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}Test ${CMAKE_THREAD_LIBS_INIT} ${JSONCPP_LIBRARIES})
 
 target_link_libraries(${PROJECT_NAME}4001 AirLib)
 target_link_libraries(${PROJECT_NAME}4001 ${RPC_LIB})

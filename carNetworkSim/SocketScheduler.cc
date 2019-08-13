@@ -166,6 +166,9 @@ bool cSocketScheduler::receiveWithTimeout(long usec)
         // Something happened on one of the sockets -- handle them
         if (connSocket != INVALID_SOCKET && FD_ISSET(connSocket, &readFDs)) {
             // receive from connSocket
+            if (SLOTSIZE + recvBufferPtr - recvBuffer >= BUFFERSIZE) {
+                recvBufferPtr = recvBuffer;
+            }
             int nBytes = recv(connSocket, recvBufferPtr, SLOTSIZE, 0);
             recvBufferPtr += SLOTSIZE;
 
@@ -206,6 +209,9 @@ bool cSocketScheduler::receiveWithTimeout(long usec)
 
         if (connSocket2 != INVALID_SOCKET && FD_ISSET(connSocket2, &readFDs)) {
             // receive from connSocket
+            if (SLOTSIZE + recvBufferPtr2 - recvBuffer2 >= BUFFERSIZE) {
+                recvBufferPtr2 = recvBuffer2;
+            }
             int nBytes = recv(connSocket2, recvBufferPtr2, SLOTSIZE, 0);
             recvBufferPtr2 += SLOTSIZE;
 

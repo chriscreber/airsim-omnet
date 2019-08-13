@@ -3,7 +3,7 @@ network net
     submodules:
         cloud: Cloud {
             parameters:
-                propDelay = 0.1s;
+                propDelay = 0.01s;
                 @display("p=217,160");
             gates:
                 g[2];
