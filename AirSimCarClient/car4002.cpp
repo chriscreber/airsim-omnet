@@ -33,13 +33,20 @@ void serializeCarData(CarRpcLibClient &car, char *carName, char *packetString) {
     sprintf(packetString, "Speed:%f,Gear:%d,PX:%f,PY:%f,PZ:%f,OW:%f,OX:%f,OY:%f,OZ:%f\r\n", state.speed, state.gear, p.x() + obj["Vehicles"][carName]["X"].asInt(), p.y() + obj["Vehicles"][carName]["Y"].asInt(), p.z() + obj["Vehicles"][carName]["Z"].asInt(), orient.w(), orient.x(), orient.y(), orient.z());
 }
 
-
+// Switching to threads, therefore this will be unused
 void sigHandler(int signum) {
     readPacket(buffer);
     otherCar.setValues(buffer);
     otherCarPktReady = 1;
 }
 
+void packetReceiver() {
+    while(true) {
+      readPacket(buffer);
+      otherCar.setValues(buffer);
+      otherCarPktReady = 1;
+    }
+}
 
 int main(int argc, char *argv[]) {
     thisCar.confirmConnection();
@@ -51,13 +58,10 @@ int main(int argc, char *argv[]) {
     reader.parse(ifs, obj);
 
     setupSocket(atoi(argv[1]), sigHandler);
+    std::thread first(packetReceiver);
     cout << "Sleeping!" << endl;
-    cout << obj["Vehicles"][carName]["X"].asInt() << endl;
-    cout << obj["Vehicles"][carName]["Y"].asInt() << endl;
-    cout << obj["Vehicles"][carName]["Z"].asInt() << endl;
 
     std::this_thread::sleep_for(std::chrono::seconds(5));
-    sleep(1);
 
     cout << "Go forward" << endl;
     controls.handbrake = false;
@@ -91,11 +95,11 @@ int main(int argc, char *argv[]) {
            std::cout << "other car end" << getOtherCarEndPoint(otherCar) << endl;
 
 
-      }
-      // std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      sleep(1);
-      sleep(5);
-      // cout << otherCarPktReady << endl;
+         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // sleep(1);
+        // sleep(5);
+        // cout << otherCarPktReady << endl;
     }
 
     thisCar.setCarControls(CarApiBase::CarControls());

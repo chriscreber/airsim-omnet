@@ -38,6 +38,8 @@ int setupSocket(int port, void (*signal_handler) (int)) {
         return -1;
     }
 
+    // Switching to threads, so no interrupts
+    /*
     signal(SIGIO, signal_handler);
     fcntl(sock, F_SETOWN, getpid());
     int flag;
@@ -46,6 +48,7 @@ int setupSocket(int port, void (*signal_handler) (int)) {
     int on = 1;
     ioctl(sock, FIOASYNC, &on);
     return 0;
+    */
 }
 
 void readPacket(char *s) {

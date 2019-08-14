@@ -10,7 +10,7 @@ add_subdirectory("${AIRSIM_ROOT}/cmake/AirLib" ./lib/airlib)
 add_subdirectory("${AIRSIM_ROOT}/cmake/MavLinkCom" ./lib/mavlinkcom)
 
 project(Car)
-set (CMAKE_CXX_FLAGS "-ljsoncpp")
+Set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -ljsoncpp -pthread")
 LIST(APPEND CMAKE_MODULE_PATH "${AIRSIM_ROOT}/cmake/cmake-modules")
 INCLUDE("${AIRSIM_ROOT}/cmake/cmake-modules/CommonSetup.cmake")
 CommonSetup()
@@ -38,6 +38,9 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(JSONCPP jsoncpp)
 link_libraries(${JSONCPP_LIBRARIES})
 
+
+## Adding threads
+find_package (Threads)
 
 
 add_executable(${PROJECT_NAME}4001 car4001.cpp rotationUtility.cpp asyncSocketClient.cpp packet.cpp collisionUtility.cpp)

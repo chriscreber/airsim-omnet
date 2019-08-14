@@ -36,7 +36,7 @@ CarRpcLibClient client;         // This car
 
 char buffer[RCVBUFSIZE] = {0};
 carPacket otherCar;
-int pktReady = 0;
+int otherCarPktReady = 0;
 ifstream ifs("/home/cyber/Documents/AirSim/settings.json");
 Json::Reader reader;
 Json::Value obj;
@@ -56,7 +56,15 @@ void sigHandler(int signum) {
     readPacket(buffer);
     otherCar.setValues(buffer);
     cout << otherCar.Speed << endl;
-    pktReady = 1;
+    otherCarPktReady = 1;
+}
+
+void packetReceiver() {
+    while(true) {
+      readPacket(buffer);
+      otherCar.setValues(buffer);
+      otherCarPktReady = 1;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -69,9 +77,10 @@ int main(int argc, char *argv[]) {
     reader.parse(ifs, obj);
 
     setupSocket(atoi(argv[1]), sigHandler);
+    std::thread first(packetReceiver);
     cout << "Sleeping!" << endl;
+
     std::this_thread::sleep_for(std::chrono::seconds(5));
-    sleep(1);
 
     /*
     cout << "Go forward" << endl;
@@ -89,9 +98,9 @@ int main(int argc, char *argv[]) {
         // sendPacket((unsigned char *)packet, sizeof(*packet));
         // delete packet;
         cout << "Sending message" << endl;
-        if(pktReady) {
+        if(otherCarPktReady) {
           cout << "hi" << endl;
-          pktReady = 0;
+          otherCarPktReady = 0;
         }
         // controls.handbrake = false;
         // controls.throttle = 0.1;
@@ -112,8 +121,7 @@ int main(int argc, char *argv[]) {
         // controls.manual_gear = 0;
         // controls.handbrake = true;
         // client.setCarControls(controls, carName);
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        sleep(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     client.setCarControls(CarApiBase::CarControls());
