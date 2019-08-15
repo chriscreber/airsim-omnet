@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 
     cout << "Go forward" << endl;
     controls.handbrake = false;
-    controls.throttle = 0.3;
+    controls.throttle = 0.5;
     thisCar.setCarControls(controls, carName);
     int collisionCounter = 0;
 
@@ -85,15 +85,9 @@ int main(int argc, char *argv[]) {
 
           otherCarPktReady = 0;
 
-           // Need to take another look at the endpoint math, something is not working out
-           // line segment math checks tested, seems to work
-           // if (simpleCollisionDetect(otherCar, thisCarState)) {
-           //   std::cout << "collision iminent" << collisionCounter++ << '\n';
-           // }
-
-           std::cout << "this car end" << getThisCarEndPoint(thisCarState) << endl;
-           std::cout << "other car end" << getOtherCarEndPoint(otherCar) << endl;
-
+          if (simpleCollisionDetect(otherCar, thisCarState)) {
+            std::cout << "collision iminent " << collisionCounter++ << endl;
+          }
 
          }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

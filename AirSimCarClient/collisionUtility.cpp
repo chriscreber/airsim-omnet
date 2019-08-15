@@ -7,6 +7,7 @@ using namespace cPkt;
 using namespace msr::airlib;
 
 // overarching function that calls the helpers on the bottom
+// need to add a for loop because the line segment created is really thin otherwise and misses thickness of the car
 bool simpleCollisionDetect(carPacket otherCar, CarApiBase::CarState thisCar) {
     Vector3r thisCarBegPt = thisCar.kinematics_estimated.pose.position;
     Vector3r otherCarBegPt (otherCar.PX, otherCar.PY, otherCar.PZ);
@@ -21,7 +22,7 @@ bool simpleCollisionDetect(carPacket otherCar, CarApiBase::CarState thisCar) {
 // DOES NOT HANDLE Z change, cause quaternions
 Vector3r getOtherCarEndPoint(carPacket otherCar) {
 
-    float inputTime = 0.5;
+    float inputTime = 3;
     float hypotenuse = otherCar.Speed * inputTime;
 
     // orientation of Z angle from rotation utils
@@ -42,7 +43,13 @@ Vector3r getOtherCarEndPoint(carPacket otherCar) {
       yDelta = abs(yDelta);
     }
 
+    // if (otherCar.Speed < 0) {
+    //   yDelta = yDelta * -1;
+    //   xDelta = xDelta * -1;
+    // }
+
     Vector3r retVector(otherCar.PX + xDelta, otherCar.PY + yDelta, otherCar.PZ);
+    std::cout << "other car endpoint is " << retVector << '\n';
     return retVector;
 }
 
@@ -52,7 +59,7 @@ Vector3r getOtherCarEndPoint(carPacket otherCar) {
 // DOES NOT HANDLE Z change, cause quaternions
 Vector3r getThisCarEndPoint(CarApiBase::CarState thisCar) {
 
-    float inputTime = 0.5;
+    float inputTime = 3;
     float hypotenuse = thisCar.speed * inputTime;
 
     // orientation of Z angle from rotation utils
@@ -74,7 +81,14 @@ Vector3r getThisCarEndPoint(CarApiBase::CarState thisCar) {
       yDelta = abs(yDelta);
     }
 
+    // if (thisCar.speed < 0) {
+    //   yDelta = yDelta * -1;
+    //   xDelta = xDelta * -1;
+    // }
+
     Vector3r retVector(thisCarVector.x() + xDelta, thisCarVector.y() + yDelta, thisCarVector.z());
+    std::cout << "this car endpoint is " << retVector << '\n';
+
     return retVector;
 }
 
