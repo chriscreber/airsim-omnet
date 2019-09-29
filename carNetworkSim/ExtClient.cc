@@ -128,7 +128,7 @@ void ExtClient::handleSocketEvent()
     httpMsg->setSrcAddress(srcAddr1);
 
     recvBufferPtr += SLOTSIZE;
-    if (recvBufferPtr-recvBuffer >= BUFFERSIZE) {
+    if (SLOTSIZE + recvBufferPtr - recvBuffer >= BUFFERSIZE) {
         recvBufferPtr = recvBuffer;
     }
 
@@ -158,7 +158,7 @@ void ExtClient::handleSocketEvent2()
     httpMsg->setSrcAddress(srcAddr2);
 
     recvBufferPtr2 += SLOTSIZE;
-    if (recvBufferPtr2-recvBuffer2 >= BUFFERSIZE) {
+    if (SLOTSIZE + recvBufferPtr2 - recvBuffer2 >= BUFFERSIZE) {
         recvBufferPtr2 = recvBuffer2;
     }
 

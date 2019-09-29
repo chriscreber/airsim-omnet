@@ -10,13 +10,14 @@
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 
+#include <iostream>
+using namespace std;
+
 #define RCVBUFSIZE 200    // Size of receive buffer
 #define HOST "127.0.0.1"
 
-
 int sock = 0, valread;
 struct sockaddr_in serv_addr;
-char buffer[200] = {0};
 
 int setupSocket(int port, void (*signal_handler) (int)) {
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -37,6 +38,8 @@ int setupSocket(int port, void (*signal_handler) (int)) {
         return -1;
     }
 
+    // Switching to threads, so no interrupts
+    /*
     signal(SIGIO, signal_handler);
     fcntl(sock, F_SETOWN, getpid());
     int flag;
@@ -45,12 +48,21 @@ int setupSocket(int port, void (*signal_handler) (int)) {
     int on = 1;
     ioctl(sock, FIOASYNC, &on);
     return 0;
+    */
 }
 
-void readPacket(unsigned char *s, int numBytes) {
-    valread = read(sock, s, numBytes);
+void readPacket(char *s) {
+    valread = read(sock, s, RCVBUFSIZE);
 }
 
-void sendPacket(const unsigned char *packet, int numBytes) {
-    send(sock, packet, numBytes, 0);
+void sendPacket(char *packet) {
+    send(sock, packet, RCVBUFSIZE, 0);
 }
+
+// void readPacket(unsigned char *s, int numBytes) {
+//     valread = read(sock, s, numBytes);
+// }
+//
+// void sendPacket(const unsigned char *packet, int numBytes) {
+//     send(sock, packet, numBytes, 0);
+// }

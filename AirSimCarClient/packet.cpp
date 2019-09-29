@@ -1,32 +1,14 @@
 #include <iostream>
 #include <string>
-#include Packet.h
+#include "packet.h"
 using namespace std;
-
-Packet::Packet(float speed, float gear, float px, float py, float pz, float ow, float ox, float oy, float oz)
-	: Speed(speed), Gear(gear), PX(px), PY(py), PZ(pz), OW(ow), OX(ox), OY(oy), OZ(oz) 
+using namespace cPkt;
+carPacket::carPacket(float speed, float gear, float px, float py, float pz, float ow, float ox, float oy, float oz)
+	: Speed(speed), Gear(gear), PX(px), PY(py), PZ(pz), OW(ow), OX(ox), OY(oy), OZ(oz)
 {}
 
-Packet::getSpeed() { return Speed };
-
-Packet::getGear() { return Gear };
-
-Packet::getPX() { return PX };
-
-Packet::getPY() { return PY };
-
-Packet::getPZ() { return PZ };
-
-Packet::getOW() { return OW };
-
-Packet::getOX() { return OX };
-
-Packet::getOY() { return OY };
-
-Packet::getOZ() { return OZ };
-
 // There is no error check for the format of the string, will segfault with improper formatting
-Packet::setValues(string str) {
+void carPacket::setValues(string str) {
 	string delim = ",";
 	string strArr[9];
 	float attributes[9];
@@ -34,13 +16,13 @@ Packet::setValues(string str) {
 	string token;
 
 	size_t pos = 0;
-	while ((pos = test.find(delim)) != std::string::npos)
+	while ((pos = str.find(delim)) != std::string::npos)
 	{
-		token = test.substr(0, pos);
+		token = str.substr(0, pos);
 		strArr[counter++] = token;
-		test.erase(0, pos + delim.length());
+		str.erase(0, pos + delim.length());
 	}
-	strArr[counter] = test.substr(0, test.length());
+	strArr[counter] = str.substr(0, str.length());
 
 	for (int index = 0; index < 9; index++)
 	{
@@ -48,9 +30,15 @@ Packet::setValues(string str) {
 		attributes[index] = stod(element.substr(element.find(":") + 1, element.length()));
 	}
 
-	Packet(attributes[0], attributes[1], attributes[2], attributes[3], attributes[4], attributes[5], attributes[6], attributes[7], attributes[8]);
+	// Packet(attributes[0], attributes[1], attributes[2], attributes[3], attributes[4], attributes[5], attributes[6], attributes[7], attributes[8]);
+	this->Speed = attributes[0];
+	this->Gear = attributes[1];
+	this->PX = attributes[2];
+	this->PY = attributes[3];
+	this->PZ = attributes[4];
+	this->OW = attributes[5];
+	this->OX = attributes[6];
+	this->OY = attributes[7];
+	this->OZ = attributes[8];
 
 };
-
-
-
