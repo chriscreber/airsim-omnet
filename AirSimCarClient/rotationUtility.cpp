@@ -10,6 +10,7 @@ Vector3r *getCollisionVector(Vector3r &thisCarPos, Vector3r &otherCarPos) {
     return collisionVector;
 }
 
+
 // return angle of otherCar from x axis in radians
 float getCollisionAngle(Vector3r &collisionVecx) {
     float theta;
@@ -27,6 +28,7 @@ float getCollisionAngle(Vector3r &collisionVecx) {
     return theta;
 }
 
+
 // return angle of this car around z axis from x axis in radians (CW is positive, CCW is negative)
 // returns in radians
 // facing "forward or x-axis in unreal" is 0, then going clockwise is to positive pi and counter-clockwise is to negative pi
@@ -40,6 +42,7 @@ float getZAngleFromQuat(Quaternionr &thisCarQuat) {
   return theta;
 }
 
+
 // calculate turn angle
 float calcTurnAngle(float collisionAngle, float thisCarAngle) {
   float turnAngle = collisionAngle - thisCarAngle;
@@ -51,6 +54,56 @@ float calcTurnAngle(float collisionAngle, float thisCarAngle) {
 
   return turnAngle;
 }
+
+
+// returns a new radian after rotating where the car faces 90 degrees clockwise or counter-clockwise, depends on increment.
+// clockwise is positive increment
+float rotate90(float carRadian, float increment) {
+
+  float newCarRadian;
+
+  if (increment == 0) {
+    return carRadian;
+  }
+  else if (increment > 0) {
+    if (carRadian <= 0){
+        newCarRadian = carRadian + (M_PI / 2);
+    }
+    else if (carRadian > (M_PI / 2)) {
+      newCarRadian = carRadian - (3 * (M_PI / 2));
+    }
+    else {
+      newCarRadian = carRadian + (M_PI / 2);
+    }
+  }
+  else {
+    if (carRadian <= 0){
+        newCarRadian = carRadian - (M_PI / 2);
+    }
+    else if (carRadian > (M_PI / 2)) {
+      newCarRadian = carRadian + (3 * (M_PI / 2));
+    }
+    else {
+      newCarRadian = carRadian - (M_PI / 2);
+    }
+  }
+  return newCarRadian;
+}
+
+
+// returns a new radian after rotating where the car faces 180 degrees clockwise or counter-clockwise, doesn't matter.
+float rotate180(float carRadian, float increment) {
+
+  if (increment == 0) {
+    return carRadian;
+  }
+  else if (carRadian > 0) {
+    return carRadian - M_PI;
+  } else {
+    return carRadian + M_PI;
+  }
+}
+
 
 // get the steering value from the turn angle. Between -0.5 and 0.5
 float calcSteering(float turnAngle) {
@@ -64,6 +117,7 @@ float calcSteering(float turnAngle) {
 
   return turnAngle;
 }
+
 
 float completeCalcSteering(CarApiBase::CarState thisCarState, carPacket otherCar, Json::Value obj, char *carName) {
   Vector3r _thisCarPosition = thisCarState.kinematics_estimated.pose.position;

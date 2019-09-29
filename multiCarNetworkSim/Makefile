@@ -1,12 +1,12 @@
 #
-# OMNeT++/OMNEST Makefile for mysocketsMoreClean2
+# OMNeT++/OMNEST Makefile for multiCarNetworkSim
 #
 # This file was generated with the command:
 #  opp_makemake -f --deep -O out -I.
 #
 
 # Name of target to be created (-o option)
-TARGET = mysocketsMoreClean2$(D)$(EXE_SUFFIX)
+TARGET = multiCarNetworkSim$(D)$(EXE_SUFFIX)
 TARGET_DIR = .
 
 # User interface (uncomment one) (-u option)

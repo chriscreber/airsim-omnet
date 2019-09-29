@@ -85,8 +85,8 @@ int main(int argc, char *argv[]) {
 
           otherCarPktReady = 0;
 
-          if (simpleCollisionDetect(otherCar, thisCarState)) {
-            std::cout << "collision iminent " << collisionCounter++ << endl;
+          if (simpleCollisionPredict(otherCar, thisCarState, obj, carName)) {
+            std::cout << "!!!! collision iminent !!! " << collisionCounter++ << endl;
           }
 
          }

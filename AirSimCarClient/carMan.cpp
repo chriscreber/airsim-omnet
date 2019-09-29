@@ -26,6 +26,7 @@ STRICT_MODE_ON
 #include "rotationUtility.h"
 #include "asyncSocketClient.h"
 #include "packet.h"
+#include "collisionUtility.h"
 
 using namespace std;
 using namespace cPkt;
@@ -90,16 +91,11 @@ int main(int argc, char *argv[]) {
     */
 
     while (true) {
-        // struct carNetPacket *packet = serializeCarData(client, carName);
         char packetString[200] = {0};
         serializeCarData(client, carName, packetString);
-        // cout << packetString << endl;
         sendPacket(packetString);
-        // sendPacket((unsigned char *)packet, sizeof(*packet));
-        // delete packet;
-        cout << "Sending message" << endl;
+
         if(otherCarPktReady) {
-          cout << "hi" << endl;
           otherCarPktReady = 0;
         }
         // controls.handbrake = false;
@@ -121,6 +117,7 @@ int main(int argc, char *argv[]) {
         // controls.manual_gear = 0;
         // controls.handbrake = true;
         // client.setCarControls(controls, carName);
+
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+
+echo How many clients?
+
+read numClients
+
+for ((num=1; num<=$numClients; num++))
+do
+    ./build/output/bin/CarAuto 400$num &
+done
+
+fg
+
+#./output/bin/Car4002 4001 &
+#./output/bin/Car4002 4002 &
+#fg

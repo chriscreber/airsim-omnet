@@ -45,6 +45,9 @@ Vector3r *getCollisionVector(Vector3r &thisCarPos, Vector3r &otherCarPos);
 float getCollisionAngle(Vector3r &collisionVecx);
 float getZAngleFromQuat(Quaternionr &thisCarQuat);
 float calcTurnAngle(float collisionAngle, float thisCarAngle);
+float rotate90(float carRadian, float increment);
+// function below is not tested
+float rotate180(float carRadian, float increment);
 float calcSteering(float turnAngle);
 float completeCalcSteering(CarApiBase::CarState thisCarState, carPacket otherCar, Json::Value obj, char *carName);
 
